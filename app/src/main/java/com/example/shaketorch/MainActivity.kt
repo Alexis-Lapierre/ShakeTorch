@@ -3,9 +3,11 @@ package com.example.shaketorch
 import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorManager
+import android.hardware.camera2.CameraManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -17,44 +19,54 @@ import com.example.shaketorch.ui.theme.ShakeTorchTheme
 
 class MainActivity : ComponentActivity() {
     private var shakeIndex: Int = 0
+    private lateinit var cameraManager: CameraManager
+    private val torchState = FlashLightState()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            ShakeTorchTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    Greeting("Android")
-                }
-            }
-        }
+        this.lateInit()
+        this.drawCurrentState()
+    }
 
-        val manager = SensorEvent { this.onShake() }
-        val sensor = (getSystemService(Context.SENSOR_SERVICE) as? SensorManager)
+    private fun lateInit() {
+        val sensorListener = SensorEvent { this.onShake() }
+        val sensorManager = (getSystemService(Context.SENSOR_SERVICE) as? SensorManager)
             ?: error("SENSOR_SERVICE is not a SensorManager!")
 
-        sensor.registerListener(
-            manager,
-            sensor.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+        sensorManager.registerListener(
+            sensorListener,
+            sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
             SensorManager.SENSOR_DELAY_UI
         )
 
+        this.cameraManager =
+            (getSystemService(Context.CAMERA_SERVICE)) as? CameraManager
+                ?: error("CAMERA_SERVICE is not a CameraManager!")
+        this.cameraManager.registerTorchCallback(this.torchState, null)
     }
 
     private fun onShake() {
-        setContent {
+        this.shakeIndex += 1
+        this.drawCurrentState()
+    }
+
+    private fun drawCurrentState() {
+        this.setContent {
             ShakeTorchTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting("Shake event n°" + ++shakeIndex)
+                    val self = this
+                    Column {
+                        Greeting("Shake event n°" + self.shakeIndex)
+                        Greeting("Torch is " + self.torchState.isOn())
+
+                    }
                 }
             }
         }
+
     }
 }
 
