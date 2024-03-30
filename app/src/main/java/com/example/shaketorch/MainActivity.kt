@@ -1,5 +1,8 @@
 package com.example.shaketorch
 
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.shaketorch.ui.theme.ShakeTorchTheme
 
 class MainActivity : ComponentActivity() {
+    private var shakeIndex: Int = 0
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -23,6 +27,31 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Greeting("Android")
+                }
+            }
+        }
+
+        val manager = SensorEvent { this.onShake() }
+        val sensor = (getSystemService(Context.SENSOR_SERVICE) as? SensorManager)
+            ?: error("SENSOR_SERVICE is not a SensorManager!")
+
+        sensor.registerListener(
+            manager,
+            sensor.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+            SensorManager.SENSOR_DELAY_UI
+        )
+
+    }
+
+    private fun onShake() {
+        setContent {
+            ShakeTorchTheme {
+                // A surface container using the 'background' color from the theme
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    Greeting("Shake event n°" + ++shakeIndex)
                 }
             }
         }
