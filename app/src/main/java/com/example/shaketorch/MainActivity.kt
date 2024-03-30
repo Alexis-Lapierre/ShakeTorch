@@ -46,7 +46,12 @@ class MainActivity : ComponentActivity() {
 
     private fun onShake() {
         this.shakeIndex += 1
+        this.toggleTorch()
         this.drawCurrentState()
+    }
+
+    private fun toggleTorch() {
+        this.cameraManager.setTorchMode("0", !this.torchState.isOn())
     }
 
     private fun drawCurrentState() {
@@ -60,8 +65,6 @@ class MainActivity : ComponentActivity() {
                     val self = this
                     Column {
                         Greeting("Shake event n°" + self.shakeIndex)
-                        Greeting("Torch is " + self.torchState.isOn())
-
                     }
                 }
             }
