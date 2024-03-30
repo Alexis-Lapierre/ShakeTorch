@@ -10,6 +10,7 @@ class SensorEvent(val onShake: () -> Unit) : SensorEventListener {
     private val MIN_DIRECTION_CHANGE: Int = 3
     private val MAX_PAUSE_BETWEEN_DIRECTION_CHANGE: Int = 200
     private val MAX_TOTAL_DURATION_OF_SHAKE: Int = 400
+    private val TIMEOUT_BETWEEN_ACTIVATIONS_IN_MILI: Long = 2_000
 
     private var mFirstDirectionChangeTime: Long = 0
     private var mLastDirectionChangeTime: Long = 0
@@ -19,9 +20,17 @@ class SensorEvent(val onShake: () -> Unit) : SensorEventListener {
     private var lastY: Float = 0f
     private var lastZ: Float = 0f
 
+    private var lastShakeActivation: Long = 0
+
     override fun onSensorChanged(sensorEvent: SensorEvent?) {
         if (sensorEvent == null) {
             error("sensorEvent.onSensorChanged should not be null")
+        }
+
+        // get time
+        val now = System.currentTimeMillis()
+        if ((this.lastShakeActivation + TIMEOUT_BETWEEN_ACTIVATIONS_IN_MILI) > now) {
+            return
         }
 
         // Axis of the rotation sample, not normalized yet.
@@ -29,8 +38,6 @@ class SensorEvent(val onShake: () -> Unit) : SensorEventListener {
         val totalMovement = abs(x + y + z - this.lastX - this.lastY - this.lastZ)
         if (totalMovement > MIN_FORCE) {
 
-            // get time
-            val now = System.currentTimeMillis()
 
             // store first movement time
             if (mFirstDirectionChangeTime == 0L) {
@@ -59,6 +66,7 @@ class SensorEvent(val onShake: () -> Unit) : SensorEventListener {
                     if (totalDuration < MAX_TOTAL_DURATION_OF_SHAKE) {
                         this.onShake()
                         this.resetShakeParameters()
+                        this.lastShakeActivation = now
                     }
                 }
             } else {
