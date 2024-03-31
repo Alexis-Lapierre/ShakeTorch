@@ -20,7 +20,7 @@ import com.example.shaketorch.ui.theme.ShakeTorchTheme
 class MainActivity : ComponentActivity() {
     private var shakeIndex: Int = 0
     private lateinit var cameraManager: CameraManager
-    private val torchState = FlashLightState()
+    private val torchState = FlashLightState { this.onTorchChanged() }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         this.lateInit()
@@ -50,6 +50,10 @@ class MainActivity : ComponentActivity() {
         this.drawCurrentState()
     }
 
+    private fun onTorchChanged() {
+        this.drawCurrentState()
+    }
+
     private fun toggleTorch() {
         this.cameraManager.setTorchMode("0", !this.torchState.isOn())
     }
@@ -64,7 +68,8 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val self = this
                     Column {
-                        Greeting("Shake event n°" + self.shakeIndex)
+                        Text(text = "Shake event n°" + self.shakeIndex)
+                        Text(text = "Torch is currently " + self.torchState.isOn())
                     }
                 }
             }
@@ -73,18 +78,10 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     ShakeTorchTheme {
-        Greeting("Android")
+        Text(text = "TODO understand what a greeting preview is")
     }
 }
