@@ -5,6 +5,8 @@ import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.hardware.camera2.CameraManager
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.VibratorManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
@@ -20,6 +22,7 @@ import com.example.shaketorch.ui.theme.ShakeTorchTheme
 class MainActivity : ComponentActivity() {
     private var shakeIndex: Int = 0
     private lateinit var cameraManager: CameraManager
+    private lateinit var vibrationManager: VibratorManager
     private val torchState = FlashLightState { this.onTorchChanged() }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,6 +45,10 @@ class MainActivity : ComponentActivity() {
             (getSystemService(Context.CAMERA_SERVICE)) as? CameraManager
                 ?: error("CAMERA_SERVICE is not a CameraManager!")
         this.cameraManager.registerTorchCallback(this.torchState, null)
+
+        this.vibrationManager =
+            (getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)
+                ?: error("VIBRATOR_MANAGER_SERVICE is not a VibratorManager")
     }
 
     private fun onShake() {
@@ -56,6 +63,17 @@ class MainActivity : ComponentActivity() {
 
     private fun toggleTorch() {
         this.cameraManager.setTorchMode("0", !this.torchState.isOn())
+        this.vibrate()
+    }
+
+    private fun vibrate() {
+        this.vibrationManager.defaultVibrator.vibrate(
+            VibrationEffect.createWaveform(
+                longArrayOf(100, 50, 100),
+                intArrayOf(VibrationEffect.DEFAULT_AMPLITUDE, 0, VibrationEffect.DEFAULT_AMPLITUDE),
+                -1
+            )
+        )
     }
 
     private fun drawCurrentState() {
